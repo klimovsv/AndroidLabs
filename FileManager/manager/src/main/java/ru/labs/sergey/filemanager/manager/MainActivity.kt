@@ -2,9 +2,12 @@ package ru.labs.sergey.filemanager.manager
 
 import android.app.ListActivity
 import android.content.ComponentCallbacks2
+import android.content.pm.PackageManager
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Environment
+import android.support.v4.app.ActivityCompat
+import android.support.v4.content.ContextCompat
 import android.util.Log
 import android.view.View
 import android.widget.ArrayAdapter
@@ -13,6 +16,7 @@ import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.File
 import java.io.IOException
+
 
 class MainActivity : ListActivity() {
     var adapter : ArrayAdapter<String>? = null
@@ -53,17 +57,39 @@ class MainActivity : ListActivity() {
 
     fun goHome(){
         if(isExternalStorageWritable()){
-//            update(getAlbumDir())
-            update(filesDir)
+            update(getAlbumDir())
+//            update(filesDir)
         }else{
             update(filesDir)
         }
     }
 
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            Log.i("WTF", "Permission: " + permissions[0] + "was " + grantResults[0])
+            //resume tasks needing this permission
+        }
+    }
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+
+        val permission = ContextCompat.checkSelfPermission(this,
+                android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            Log.i("WTF", "Permission to record denied")
+            ActivityCompat.requestPermissions(this,
+                    arrayOf(
+                            android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                            android.Manifest.permission.READ_EXTERNAL_STORAGE
+                    ),
+                    1)
+        }
 
         homebtn.setOnClickListener{
             goHome()
